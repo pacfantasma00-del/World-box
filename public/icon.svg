@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#0b0f19"/>
+  <!-- Planet ocean background -->
+  <circle cx="256" cy="270" r="160" fill="#1e3a8a"/>
+  <!-- Continents in pixel style -->
+  <path d="M180 180 h60 v30 h-40 v40 h-50 v-40 h30 z" fill="#22c55e"/>
+  <path d="M270 200 h70 v40 h-30 v30 h-50 v-30 h10 z" fill="#15803d"/>
+  <path d="M200 300 h80 v50 h-50 v20 h-40 v-40 h10 z" fill="#22c55e"/>
+  <path d="M310 320 h40 v30 h-30 v20 h-30 v-30 h20 z" fill="#eab308"/>
+  <!-- Golden Crown over the planet -->
+  <polygon points="176,140 216,190 256,110 296,190 336,140 336,210 176,210" fill="#fbbf24" stroke="#f59e0b" stroke-width="8"/>
+  <!-- Crown Jewels -->
+  <circle cx="176" cy="130" r="12" fill="#ef4444"/>
+  <circle cx="256" cy="100" r="14" fill="#38bdf8"/>
+  <circle cx="336" cy="130" r="12" fill="#10b981"/>
+</svg>

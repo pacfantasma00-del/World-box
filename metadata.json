@@ -1,0 +1,8 @@
+{
+  "name": "WorldBox - God Sandbox Simulator",
+  "description": "Pixel god simulator sandbox where you build civilizations, spawn mythical creatures, command armies, and unleash divine powers and natural cataclysms.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
