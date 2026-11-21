@@ -56,35 +56,17 @@ export class AstroMatrixCore {
   private static instance: AstroMatrixCore;
 
   public memory: AstroMemory = {
+    // Contexto padrão da simulação; não representa memória persistida do usuário.
     CURRENT_CONTEXT: {
       activeSimulation: 'WorldBox God Sandbox',
       selectedRaces: ['human', 'elf', 'orc', 'dwarf'],
       mode: 'ASTRO HÍBRIDO: Gateway + Autonomia Controlada',
       deviceTarget: 'Termux / Android / Linux',
     },
-    PREVIOUS_CONTEXT: {
-      lastCrashFix: 'TypeError: Cannot read properties of undefined (reading includes) corrigido com guardas defensivas',
-      nexusPagConfig: 'Chave Pix Live registrada com fallback EMV padrão',
-      zipGenerator: 'make_zip.py com compressão zipfile nativa em 0.1s',
-    },
-    PERSISTED_MEMORY: [
-      { key: 'IDENTIDADE', value: 'ASTRO CORE MATRIX (Núcleo de Inteligência e Autonomia)', confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-      { key: 'ARQUITETURA', value: 'ASTRO HÍBRIDO (Gateway + Orquestrador + Sandbox de Simulação)', confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-      { key: 'PORTA_PADRAO', value: 3000, confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-      { key: 'ANTI_QUOTA', value: 'Circuit breaker com Exponential Backoff e Cache de Respostas ativado', confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-    ],
-    EXECUTION_HISTORY: [
-      { action: 'Audit Initial History', result: 'Auditoria de histórico PM2 e Termux compilada', timestamp: Date.now() - 3600000, success: true },
-      { action: 'Fix Termux Includes Error', result: 'Adicionada verificação de nulidade em arrays e strings', timestamp: Date.now() - 1800000, success: true },
-      { action: 'Build Fast Installer', result: 'Criado public/install.sh com detecção de pkg install', timestamp: Date.now() - 60000, success: true },
-    ],
-    PROJECT_STATE: {
-      'termux-pkg-installer': { status: 'CONFIRMADO', evidence: 'Script public/install.sh pronto para pkg install -y' },
-      'worldbox-engine': { status: 'CONFIRMADO', evidence: 'Celular automata, civilizações, reinos e barcos operacionais' },
-      'server-backend': { status: 'CONFIRMADO', evidence: 'Express server na porta 3000 com rotas /api/download-zip e /install.sh' },
-      'nexus-pag-pix': { status: 'CONFIRMADO', evidence: 'Payload Pix EMV com validação e polling de status' },
-      'anti-quota-circuit-breaker': { status: 'CONFIRMADO', evidence: 'Controle de taxa e backoff ativo' },
-    },
+    PREVIOUS_CONTEXT: {},
+    PERSISTED_MEMORY: [],
+    EXECUTION_HISTORY: [],
+    PROJECT_STATE: {},
   };
 
   public antiQuota: AntiQuotaMetrics = {
