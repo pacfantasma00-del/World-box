@@ -29,6 +29,7 @@ export interface AstroTask {
   nextAction: string;
   createdAt: number;
   completedAt?: number;
+  verifiedBy?: string;
 }
 
 export interface AntiQuotaMetrics {
@@ -87,51 +88,19 @@ export class AstroMatrixCore {
   };
 
   public antiQuota: AntiQuotaMetrics = {
-    totalRequests: 14,
-    totalTokensEstimate: 2840,
-    cacheHits: 6,
+    totalRequests: 0,
+    totalTokensEstimate: 0,
+    cacheHits: 0,
     http429Errors: 0,
     circuitBreakerState: 'CLOSED',
-    concurrencyLimit: 5,
+    concurrencyLimit: 1,
     activeRequests: 0,
     backoffDelayMs: 0,
     lastFailureTime: 0,
   };
 
-  public tasks: AstroTask[] = [
-    {
-      id: 'task_001',
-      goal: 'Instalador Automático para Termux / Android via pkg install',
-      context: 'Facilitar a instalação direta no Termux sem conflitos',
-      prerequisites: ['Node.js LTS', 'Python', 'Unzip', 'Curl'],
-      plan: ['Verificar pacote pkg', 'Baixar zip do projeto', 'Instalar dependências', 'Gerar start.sh defensivo'],
-      authorizedTools: ['pkg', 'curl', 'unzip', 'npm'],
-      riskLevel: 'LOW',
-      status: 'CONCLUÍDA',
-      attempts: 1,
-      evidence: ['Arquivo public/install.sh criado e testado', 'Rota /install.sh exposta no servidor'],
-      verificationResult: 'Instalação com 1 comando: curl -sSL <host>/install.sh | bash funcional',
-      nextAction: 'Monitorar inicialização e relatórios de execução',
-      createdAt: Date.now() - 120000,
-      completedAt: Date.now() - 10000,
-    },
-    {
-      id: 'task_002',
-      goal: 'Proteção Anti-Quota e Circuit Breaker para Provedores de IA',
-      context: 'Evitar erro HTTP 429 e respeitar limites de requisição da API Gemini',
-      prerequisites: ['Contador de tokens', 'Circuit Breaker', 'Fallback local'],
-      plan: ['Interceptar chamadas', 'Checar estado do circuito', 'Retornar fallback se circuito estiver aberto', 'Registrar histórico'],
-      authorizedTools: ['Express Proxy', 'In-memory Cache'],
-      riskLevel: 'MEDIUM',
-      status: 'CONCLUÍDA',
-      attempts: 1,
-      evidence: ['Rotas de lore e inner-monologue usam fallback seguro quando chave offline'],
-      verificationResult: 'Zero requisições perdidas com resiliência total',
-      nextAction: 'Exibir telemetria em tempo real no HUD',
-      createdAt: Date.now() - 60000,
-      completedAt: Date.now() - 5000,
-    },
-  ];
+  // Não inserir histórico fictício: tarefas surgem apenas por requisições reais.
+  public tasks: AstroTask[] = [];
 
   public static getInstance(): AstroMatrixCore {
     if (!AstroMatrixCore.instance) {
@@ -168,20 +137,20 @@ export class AstroMatrixCore {
     return {
       name: 'ASTRO MATRIX',
       core: 'ASTRO CORE PRO V10',
-      status: 'OPERACIONAL',
+      status: 'DEGRADED',
       architecture: {
-        identity: 'CONFIRMADO',
-        memory: 'CONFIRMADO',
-        context: 'CONFIRMADO',
-        planner: 'CONFIRMADO',
-        orchestrator: 'CONFIRMADO',
-        router: 'CONFIRMADO',
-        providers: 'CONFIRMADO',
-        tools: 'CONFIRMADO',
-        executor: 'CONFIRMADO',
-        auditor: 'CONFIRMADO',
-        observability: 'CONFIRMADO',
-        learning: 'CONFIRMADO',
+        identity: 'NOT_TESTED',
+        memory: 'DEGRADED',
+        context: 'NOT_TESTED',
+        planner: 'NOT_CONFIGURED',
+        orchestrator: 'NOT_CONFIGURED',
+        router: 'NOT_CONFIGURED',
+        providers: process.env.GEMINI_API_KEY ? 'NOT_TESTED' : 'NOT_CONFIGURED',
+        tools: 'NOT_CONFIGURED',
+        executor: 'NOT_CONFIGURED',
+        auditor: 'NOT_CONFIGURED',
+        observability: 'NOT_CONFIGURED',
+        learning: 'NOT_CONFIGURED',
       },
       antiQuota: this.antiQuota,
       tasks: this.tasks,
