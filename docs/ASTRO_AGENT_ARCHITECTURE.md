@@ -17,6 +17,18 @@ Documentação de referência:
 
 A escolha é uma recomendação baseada na compatibilidade e nos requisitos atuais; não significa que o pacote já esteja instalado ou que exista agente em execução.
 
+## Implementação inicial — estado verificado em 2026-11-21
+
+Foi aplicada uma primeira correção de segurança no ciclo de tarefas, ainda sem runtime multiagente:
+- `POST /api/astro/task` agora cria tarefa em `RECEBIDA`, responde HTTP 202 e declara explicitamente que nenhuma execução foi iniciada.
+- `src/astro/task.ts` introduz criação de tarefa com ID UUID, transições controladas e conclusão condicionada a evidência e verificação identificada como `astro-auditor`.
+- `src/astro/task.test.ts` contém testes para estado inicial, bloqueio de conclusão prematura e exigência de evidência/auditor.
+- `src/astro/matrix.ts` deixou de iniciar com tarefas, histórico e memória persistida fictícios; capacidades não implementadas agora aparecem como `NOT_CONFIGURED` ou `NOT_TESTED`.
+- O servidor lê `process.env.PORT` e valida o intervalo da porta.
+- `/api/health` informa `degraded` e expõe capacidades não implementadas, em vez de anunciar operacionalidade geral.
+
+**Limite importante:** as alterações foram gravadas na branch, mas os testes, o lint e o build ainda não foram executados. Não há lockfile no repositório e não há runtime LangGraph, PostgreSQL ou agentes Research/Auditor em execução. O endpoint ainda mantém tarefas apenas na memória do processo; reiniciar o serviço perde esse estado. A implementação multiagente continua pendente.
+
 ## Agentes essenciais
 
 ### 1. ASTRO SUPERVISOR — coordenador central
