@@ -96,3 +96,22 @@ Referência oficial: https://docs.cloud.google.com/run/docs/migrate/a-web-servic
 - [ ] Produção migrada.
 
 **Nenhuma alteração foi feita na branch `main` e nenhum deploy foi realizado.**
+
+
+## Atualização de implementação — 2026-11-21
+
+Após a auditoria estática inicial, foram aplicadas na branch de auditoria as seguintes correções:
+- A rota `POST /api/astro/task` agora registra tarefa como recebida (HTTP 202), sem alegar execução ou conclusão.
+- Foi adicionado `src/astro/task.ts` com transições permitidas e bloqueio de conclusão sem evidência e identificação do `astro-auditor`.
+- Foram adicionados testes automatizados em `src/astro/task.test.ts` e o script `npm test` foi direcionado para essa suíte.
+- O servidor passou a respeitar `process.env.PORT` com validação numérica.
+- O endpoint de saúde passou a expor estado `degraded` e capacidades ainda não configuradas.
+- Foram removidas tarefas, histórico e memória inicializados com alegações não verificadas; a matriz passou a reportar capacidades não implementadas como `NOT_CONFIGURED` ou `NOT_TESTED`.
+
+### Verificação após alterações
+
+Os arquivos foram relidos da branch pelo GitHub e passaram por verificações estáticas de presença, conteúdo e validade JSON de `package.json` e `config/agents.registry.json`.
+
+**Ainda não executado:** `npm install`, `npm test`, `npm run lint`, `npm run build`, teste HTTP local, teste de reinício, integração LangGraph, provisionamento PostgreSQL, staging ou deploy. O repositório não possui lockfile npm/yarn/pnpm, o que impede uma instalação reproduzível neste momento.
+
+**Estado:** correções de código commitadas e verificadas estaticamente; execução real e runtime multiagente permanecem pendentes.
