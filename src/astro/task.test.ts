@@ -26,11 +26,11 @@ test('conclusão exige evidência e auditor independente', () => {
   transitionTask(task, 'EXECUTANDO');
   transitionTask(task, 'VERIFICANDO');
   assert.equal(task.attempts, 1);
+  addTaskEvidence(task, 'Teste automatizado executado com saída 0.');
   assert.throws(() => transitionTask(task, 'CONCLUÍDA', {
     verifiedBy: 'astro-supervisor',
     verificationResult: 'Aprovado',
   }), /astro-auditor/);
-  addTaskEvidence(task, 'Teste automatizado executado com saída 0.');
   transitionTask(task, 'CONCLUÍDA', {
     verifiedBy: 'astro-auditor',
     verificationResult: 'Evidência conferida; critérios satisfeitos.',
