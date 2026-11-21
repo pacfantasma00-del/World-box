@@ -35,9 +35,15 @@ if (process.env.GEMINI_API_KEY) {
  */
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'ok',
-    game: 'WorldBox - God Sandbox Simulator',
-    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
+    status: 'degraded',
+    service: 'WorldBox API',
+    capabilities: {
+      taskSubmission: 'RECEIVING_ONLY',
+      taskExecution: 'NOT_CONFIGURED',
+      taskPersistence: 'IN_MEMORY',
+      modelProvider: ai ? 'CONFIGURED_NOT_TESTED' : 'NOT_CONFIGURED',
+      pixPaymentConfirmation: 'NOT_CONFIGURED',
+    },
   });
 });
 
