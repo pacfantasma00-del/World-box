@@ -54,12 +54,14 @@ export const PixModal: React.FC<PixModalProps> = ({ engine, onClose }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [isPaid, setIsPaid] = useState<boolean>(false);
+  const [chargeError, setChargeError] = useState<string | null>(null);
 
   // Generate Pix charge on tier selection
   const handleCreateCharge = async (tier: Tier) => {
     setIsLoading(true);
     setCopied(false);
     setIsPaid(false);
+    setChargeError(null);
     sounds.playClick();
 
     try {
@@ -71,12 +73,17 @@ export const PixModal: React.FC<PixModalProps> = ({ engine, onClose }) => {
           description: `WorldBox - ${tier.name}`,
         }),
       });
-      const data = await res.json();
-      if (data?.chargeId) {
-        setChargeData(data);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.error || 'Integração Pix indisponível.');
       }
+      if (!data?.chargeId || !data?.pixCode) {
+        throw new Error('O provedor não retornou uma cobrança Pix válida.');
+      }
+      setChargeData(data);
     } catch (err) {
-      console.error('Error creating Pix charge:', err);
+      setChargeData(null);
+      setChargeError(err instanceof Error ? err.message : 'Falha ao criar cobrança Pix.');
     } finally {
       setIsLoading(false);
     }
@@ -132,21 +139,6 @@ export const PixModal: React.FC<PixModalProps> = ({ engine, onClose }) => {
         }
       });
       engine.addChronicle('👑 A Soberania do Cosmos inaugurou a Era Arcana Mundial!', '👑', 'era');
-    }
-  };
-
-  const handleSimulatePayment = async () => {
-    if (!chargeData?.chargeId) return;
-    try {
-      const res = await fetch(`/api/nexus/simulate-payment/${chargeData.chargeId}`, {
-        method: 'POST',
-      });
-      const data = await res.json();
-      if (data?.success) {
-        handlePaymentSuccess();
-      }
-    } catch (err) {
-      console.error(err);
     }
   };
 
@@ -254,43 +246,14 @@ export const PixModal: React.FC<PixModalProps> = ({ engine, onClose }) => {
                 <span className="animate-spin text-xl">⏳</span>
                 <span>Gerando cobrança na API Nexus Pag...</span>
               </div>
+            ) : chargeError ? (
+              <div role="alert" className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+                {chargeError}
+              </div>
             ) : chargeData ? (
               <div className="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-4">
-                {/* Visual QR Code Display */}
-                <div className="w-44 h-44 bg-white p-2 rounded-xl flex items-center justify-center shadow-lg relative overflow-hidden">
-                  {/* Styled Pix QR Code Display */}
-                  <svg viewBox="0 0 100 100" className="w-full h-full">
-                    {/* Corners */}
-                    <rect x="5" y="5" width="25" height="25" fill="#000" rx="4" />
-                    <rect x="9" y="9" width="17" height="17" fill="#fff" rx="2" />
-                    <rect x="13" y="13" width="9" height="9" fill="#000" rx="1" />
-
-                    <rect x="70" y="5" width="25" height="25" fill="#000" rx="4" />
-                    <rect x="74" y="9" width="17" height="17" fill="#fff" rx="2" />
-                    <rect x="78" y="13" width="9" height="9" fill="#000" rx="1" />
-
-                    <rect x="5" y="70" width="25" height="25" fill="#000" rx="4" />
-                    <rect x="9" y="74" width="17" height="17" fill="#fff" rx="2" />
-                    <rect x="13" y="78" width="9" height="9" fill="#000" rx="1" />
-
-                    {/* Central pixels matrix */}
-                    <rect x="35" y="10" width="6" height="6" fill="#000" />
-                    <rect x="45" y="15" width="6" height="6" fill="#000" />
-                    <rect x="55" y="10" width="6" height="6" fill="#000" />
-                    <rect x="35" y="25" width="6" height="6" fill="#000" />
-                    <rect x="45" y="35" width="10" height="10" fill="#000" />
-                    <rect x="25" y="45" width="6" height="6" fill="#000" />
-                    <rect x="65" y="45" width="6" height="6" fill="#000" />
-                    <rect x="40" y="55" width="8" height="8" fill="#000" />
-                    <rect x="60" y="65" width="8" height="8" fill="#000" />
-                    <rect x="75" y="75" width="8" height="8" fill="#000" />
-                    <rect x="45" y="75" width="8" height="8" fill="#000" />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="bg-emerald-500 text-slate-950 font-bold text-[9px] px-1.5 py-0.5 rounded shadow">
-                      PIX
-                    </div>
-                  </div>
+                <div className="w-full rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-center text-xs text-amber-200">
+                  QR Code visual só será exibido quando vier de uma cobrança real validada pelo provedor.
                 </div>
 
                 <div className="text-center">
@@ -319,19 +282,8 @@ export const PixModal: React.FC<PixModalProps> = ({ engine, onClose }) => {
                   </button>
                 </div>
 
-                {/* Test simulation button for immediate verification */}
-                <div className="w-full pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                  <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                    Aguardando confirmação bancária...
-                  </span>
-                  <button
-                    onClick={handleSimulatePayment}
-                    className="text-[11px] px-2.5 py-1 bg-slate-800 hover:bg-slate-750 text-amber-400 border border-slate-700 rounded-lg transition-colors cursor-pointer"
-                    title="Simular confirmação instantânea de teste"
-                  >
-                    Simular Aprovação (Teste)
-                  </button>
+                <div className="w-full pt-2 border-t border-slate-800/80 text-center text-xs text-slate-400">
+                  Aguardando confirmação bancária verificada. Nenhuma recompensa será liberada por simulação.
                 </div>
               </div>
             ) : null}

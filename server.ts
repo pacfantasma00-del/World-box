@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import { astroMatrix } from './src/astro/matrix';
+import { createReceivedTask } from './src/astro/task';
 
 dotenv.config();
 
@@ -34,9 +35,15 @@ if (process.env.GEMINI_API_KEY) {
  */
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'ok',
-    game: 'WorldBox - God Sandbox Simulator',
-    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
+    status: 'degraded',
+    service: 'WorldBox API',
+    capabilities: {
+      taskSubmission: 'RECEIVING_ONLY',
+      taskExecution: 'NOT_CONFIGURED',
+      taskPersistence: 'IN_MEMORY',
+      modelProvider: ai ? 'CONFIGURED_NOT_TESTED' : 'NOT_CONFIGURED',
+      pixPaymentConfirmation: 'NOT_CONFIGURED',
+    },
   });
 });
 
@@ -141,110 +148,34 @@ Escreva em primeira pessoa ("Eu...") UM ÚNICO pensamento ou reflexão interna c
 /**
  * NEXUS PAG — PIX GATEWAY INTEGRATION
  */
-interface PixChargeRecord {
-  id: string;
-  amount: number;
-  description: string;
-  pixCode: string;
-  status: 'pending' | 'completed' | 'expired';
-  createdAt: number;
-  paidAt?: number;
-}
-
-const pixCharges = new Map<string, PixChargeRecord>();
-
-// Helper to generate simulated valid Pix BR Code (EMV payload standard)
-function generatePixBrCode(chargeId: string, amount: number, description: string): string {
-  const amountStr = amount.toFixed(2);
-  const cleanId = chargeId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20);
-  return `00020126580014br.gov.bcb.pix0136${cleanId}520400005303986540${amountStr.length < 10 ? '0' + amountStr.length : amountStr}${amountStr}5802BR5916NEXUS PAG BRASIL6009SAO PAULO62070503***6304ABCD`;
-}
-
-app.post('/api/nexus/pix-charge', async (req, res) => {
-  try {
-    const { amount = 10, description = 'WorldBox - Apoio Divino Pix' } = req.body;
-    const chargeId = `ch_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const apiKey = process.env.NEXUS_PAG_API_KEY || '';
-
-    // Attempt upstream call if configured
-    let upstreamPixCode = '';
-    if (apiKey) {
-      try {
-        const upstreamRes = await fetch('https://api.nexuspag.com/v1/charges', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            amount: Math.round(amount * 100), // in cents
-            payment_method: 'pix',
-            description,
-          }),
-        });
-        if (upstreamRes.ok) {
-          const upstreamData = await upstreamRes.json();
-          upstreamPixCode = upstreamData.pix_code || upstreamData.qrcode || '';
-        }
-      } catch (err) {
-        // Fallback to local EMV generator
-      }
-    }
-
-    const pixCode = upstreamPixCode || generatePixBrCode(chargeId, Number(amount), description);
-    const charge: PixChargeRecord = {
-      id: chargeId,
-      amount: Number(amount),
-      description,
-      pixCode,
-      status: 'pending',
-      createdAt: Date.now(),
-    };
-
-    pixCharges.set(chargeId, charge);
-
-    res.json({
-      success: true,
-      chargeId: charge.id,
-      amount: charge.amount,
-      description: charge.description,
-      pixCode: charge.pixCode,
-      status: charge.status,
-      expiresAt: charge.createdAt + 15 * 60 * 1000,
-      hasLiveKey: Boolean(apiKey && apiKey.startsWith('nxp_live_')),
-    });
-  } catch (error: any) {
-    console.error('Error creating Pix charge:', error);
-    res.status(500).json({ error: 'Falha ao gerar cobrança Pix' });
-  }
-});
-
-app.get('/api/nexus/charge-status/:chargeId', (req, res) => {
-  const { chargeId } = req.params;
-  const charge = pixCharges.get(chargeId);
-  if (!charge) {
-    return res.status(404).json({ error: 'Cobrança não encontrada' });
-  }
-  res.json({
-    chargeId: charge.id,
-    status: charge.status,
-    amount: charge.amount,
-    paidAt: charge.paidAt,
+/**
+ * NEXUS PAG — PIX GATEWAY
+ *
+ * Payment processing is intentionally disabled until a real provider contract,
+ * webhook signature verification, idempotency, and durable persistence exist.
+ * Never generate a synthetic BR Code or mark a charge paid from a client request.
+ */
+app.post('/api/nexus/pix-charge', (_req, res) => {
+  return res.status(503).json({
+    success: false,
+    status: 'NOT_CONFIGURED',
+    error: 'Pagamentos Pix indisponíveis: o provedor e a confirmação bancária ainda não foram integrados e verificados.',
   });
 });
 
-app.post('/api/nexus/simulate-payment/:chargeId', (req, res) => {
-  const { chargeId } = req.params;
-  const charge = pixCharges.get(chargeId);
-  if (!charge) {
-    return res.status(404).json({ error: 'Cobrança não encontrada' });
-  }
-  charge.status = 'completed';
-  charge.paidAt = Date.now();
-  res.json({
-    success: true,
-    message: 'Pagamento Pix confirmado com sucesso!',
-    charge,
+app.get('/api/nexus/charge-status/:chargeId', (_req, res) => {
+  return res.status(503).json({
+    status: 'NOT_CONFIGURED',
+    error: 'Consulta de pagamento indisponível até a integração do provedor.',
+  });
+});
+
+// Legacy test endpoint: deliberately disabled; client input can never confirm payment.
+app.post('/api/nexus/simulate-payment/:chargeId', (_req, res) => {
+  return res.status(410).json({
+    success: false,
+    status: 'GONE',
+    error: 'Confirmação simulada foi desativada. Somente confirmação bancária verificada poderá liberar recompensas.',
   });
 });
 
@@ -304,27 +235,29 @@ app.get('/api/astro/matrix-status', (req, res) => {
  */
 app.post('/api/astro/task', (req, res) => {
   try {
-    const { goal = 'Nova Tarefa Autônoma', context = '', riskLevel = 'LOW' } = req.body || {};
-    const newTask = {
-      id: `task_${Date.now()}`,
-      goal: String(goal || 'Tarefa sem título'),
-      context: String(context || 'Execução sob ASTRO CORE'),
-      prerequisites: ['Verificação de ambiente', 'Política Anti-Quota ativa'],
-      plan: ['Observar', 'Interpretar', 'Planejar', 'Validar', 'Executar', 'Verificar', 'Registrar'],
-      authorizedTools: ['Shell Seguro', 'In-memory Cache', 'Auditor de Integridade'],
-      riskLevel: (['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(riskLevel) ? riskLevel : 'LOW') as any,
-      status: 'CONCLUÍDA' as const,
-      attempts: 1,
-      evidence: ['Tarefa planejada e validada no ASTRO CORE MATRIX'],
-      verificationResult: 'Execução verificada com sucesso sem efeitos colaterais',
-      nextAction: 'Registrar na Memória Persistente',
-      createdAt: Date.now(),
-      completedAt: Date.now(),
-    };
+    const { goal = 'Nova tarefa', context = '', riskLevel = 'LOW' } = req.body || {};
+    const safeGoal = String(goal).trim().slice(0, 500);
+    const safeContext = String(context).slice(0, 5000);
+    if (!safeGoal) {
+      return res.status(400).json({ success: false, error: 'O campo goal é obrigatório.' });
+    }
+    if (!['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(riskLevel)) {
+      return res.status(400).json({ success: false, error: 'riskLevel inválido.' });
+    }
+    const newTask = createReceivedTask({
+      goal: safeGoal,
+      context: safeContext,
+      riskLevel,
+    });
     astroMatrix.tasks.unshift(newTask);
-    res.json({ success: true, task: newTask });
-  } catch (err: any) {
-    res.status(500).json({ error: 'Falha ao processar tarefa' });
+    return res.status(202).json({
+      success: true,
+      task: newTask,
+      message: 'Tarefa recebida. Nenhuma execução foi iniciada ou verificada.',
+    });
+  } catch (err) {
+    console.error('Erro ao registrar tarefa ASTRO:', err);
+    return res.status(500).json({ success: false, error: 'Falha ao registrar tarefa.' });
   }
 });
 
@@ -349,5 +282,8 @@ async function startServer() {
   });
 }
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error('PORT deve ser um número inteiro entre 1 e 65535.');
+}
 startServer();

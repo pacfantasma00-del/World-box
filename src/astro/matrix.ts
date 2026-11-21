@@ -29,6 +29,7 @@ export interface AstroTask {
   nextAction: string;
   createdAt: number;
   completedAt?: number;
+  verifiedBy?: string;
 }
 
 export interface AntiQuotaMetrics {
@@ -55,83 +56,33 @@ export class AstroMatrixCore {
   private static instance: AstroMatrixCore;
 
   public memory: AstroMemory = {
+    // Contexto padrão da simulação; não representa memória persistida do usuário.
     CURRENT_CONTEXT: {
       activeSimulation: 'WorldBox God Sandbox',
       selectedRaces: ['human', 'elf', 'orc', 'dwarf'],
       mode: 'ASTRO HÍBRIDO: Gateway + Autonomia Controlada',
       deviceTarget: 'Termux / Android / Linux',
     },
-    PREVIOUS_CONTEXT: {
-      lastCrashFix: 'TypeError: Cannot read properties of undefined (reading includes) corrigido com guardas defensivas',
-      nexusPagConfig: 'Chave Pix Live registrada com fallback EMV padrão',
-      zipGenerator: 'make_zip.py com compressão zipfile nativa em 0.1s',
-    },
-    PERSISTED_MEMORY: [
-      { key: 'IDENTIDADE', value: 'ASTRO CORE MATRIX (Núcleo de Inteligência e Autonomia)', confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-      { key: 'ARQUITETURA', value: 'ASTRO HÍBRIDO (Gateway + Orquestrador + Sandbox de Simulação)', confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-      { key: 'PORTA_PADRAO', value: 3000, confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-      { key: 'ANTI_QUOTA', value: 'Circuit breaker com Exponential Backoff e Cache de Respostas ativado', confidence: 'CONFIRMADO', updatedAt: new Date().toISOString() },
-    ],
-    EXECUTION_HISTORY: [
-      { action: 'Audit Initial History', result: 'Auditoria de histórico PM2 e Termux compilada', timestamp: Date.now() - 3600000, success: true },
-      { action: 'Fix Termux Includes Error', result: 'Adicionada verificação de nulidade em arrays e strings', timestamp: Date.now() - 1800000, success: true },
-      { action: 'Build Fast Installer', result: 'Criado public/install.sh com detecção de pkg install', timestamp: Date.now() - 60000, success: true },
-    ],
-    PROJECT_STATE: {
-      'termux-pkg-installer': { status: 'CONFIRMADO', evidence: 'Script public/install.sh pronto para pkg install -y' },
-      'worldbox-engine': { status: 'CONFIRMADO', evidence: 'Celular automata, civilizações, reinos e barcos operacionais' },
-      'server-backend': { status: 'CONFIRMADO', evidence: 'Express server na porta 3000 com rotas /api/download-zip e /install.sh' },
-      'nexus-pag-pix': { status: 'CONFIRMADO', evidence: 'Payload Pix EMV com validação e polling de status' },
-      'anti-quota-circuit-breaker': { status: 'CONFIRMADO', evidence: 'Controle de taxa e backoff ativo' },
-    },
+    PREVIOUS_CONTEXT: {},
+    PERSISTED_MEMORY: [],
+    EXECUTION_HISTORY: [],
+    PROJECT_STATE: {},
   };
 
   public antiQuota: AntiQuotaMetrics = {
-    totalRequests: 14,
-    totalTokensEstimate: 2840,
-    cacheHits: 6,
+    totalRequests: 0,
+    totalTokensEstimate: 0,
+    cacheHits: 0,
     http429Errors: 0,
     circuitBreakerState: 'CLOSED',
-    concurrencyLimit: 5,
+    concurrencyLimit: 1,
     activeRequests: 0,
     backoffDelayMs: 0,
     lastFailureTime: 0,
   };
 
-  public tasks: AstroTask[] = [
-    {
-      id: 'task_001',
-      goal: 'Instalador Automático para Termux / Android via pkg install',
-      context: 'Facilitar a instalação direta no Termux sem conflitos',
-      prerequisites: ['Node.js LTS', 'Python', 'Unzip', 'Curl'],
-      plan: ['Verificar pacote pkg', 'Baixar zip do projeto', 'Instalar dependências', 'Gerar start.sh defensivo'],
-      authorizedTools: ['pkg', 'curl', 'unzip', 'npm'],
-      riskLevel: 'LOW',
-      status: 'CONCLUÍDA',
-      attempts: 1,
-      evidence: ['Arquivo public/install.sh criado e testado', 'Rota /install.sh exposta no servidor'],
-      verificationResult: 'Instalação com 1 comando: curl -sSL <host>/install.sh | bash funcional',
-      nextAction: 'Monitorar inicialização e relatórios de execução',
-      createdAt: Date.now() - 120000,
-      completedAt: Date.now() - 10000,
-    },
-    {
-      id: 'task_002',
-      goal: 'Proteção Anti-Quota e Circuit Breaker para Provedores de IA',
-      context: 'Evitar erro HTTP 429 e respeitar limites de requisição da API Gemini',
-      prerequisites: ['Contador de tokens', 'Circuit Breaker', 'Fallback local'],
-      plan: ['Interceptar chamadas', 'Checar estado do circuito', 'Retornar fallback se circuito estiver aberto', 'Registrar histórico'],
-      authorizedTools: ['Express Proxy', 'In-memory Cache'],
-      riskLevel: 'MEDIUM',
-      status: 'CONCLUÍDA',
-      attempts: 1,
-      evidence: ['Rotas de lore e inner-monologue usam fallback seguro quando chave offline'],
-      verificationResult: 'Zero requisições perdidas com resiliência total',
-      nextAction: 'Exibir telemetria em tempo real no HUD',
-      createdAt: Date.now() - 60000,
-      completedAt: Date.now() - 5000,
-    },
-  ];
+  // Não inserir histórico fictício: tarefas surgem apenas por requisições reais.
+  public tasks: AstroTask[] = [];
 
   public static getInstance(): AstroMatrixCore {
     if (!AstroMatrixCore.instance) {
@@ -168,20 +119,20 @@ export class AstroMatrixCore {
     return {
       name: 'ASTRO MATRIX',
       core: 'ASTRO CORE PRO V10',
-      status: 'OPERACIONAL',
+      status: 'DEGRADED',
       architecture: {
-        identity: 'CONFIRMADO',
-        memory: 'CONFIRMADO',
-        context: 'CONFIRMADO',
-        planner: 'CONFIRMADO',
-        orchestrator: 'CONFIRMADO',
-        router: 'CONFIRMADO',
-        providers: 'CONFIRMADO',
-        tools: 'CONFIRMADO',
-        executor: 'CONFIRMADO',
-        auditor: 'CONFIRMADO',
-        observability: 'CONFIRMADO',
-        learning: 'CONFIRMADO',
+        identity: 'NOT_TESTED',
+        memory: 'DEGRADED',
+        context: 'NOT_TESTED',
+        planner: 'NOT_CONFIGURED',
+        orchestrator: 'NOT_CONFIGURED',
+        router: 'NOT_CONFIGURED',
+        providers: process.env.GEMINI_API_KEY ? 'NOT_TESTED' : 'NOT_CONFIGURED',
+        tools: 'NOT_CONFIGURED',
+        executor: 'NOT_CONFIGURED',
+        auditor: 'NOT_CONFIGURED',
+        observability: 'NOT_CONFIGURED',
+        learning: 'NOT_CONFIGURED',
       },
       antiQuota: this.antiQuota,
       tasks: this.tasks,

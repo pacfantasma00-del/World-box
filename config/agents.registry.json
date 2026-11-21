@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0",
+  "runtime": {
+    "name": "langgraph-js",
+    "status": "NOT_CONFIGURED",
+    "orchestration": "supervisor",
+    "parallelExecution": false,
+    "maxSpecialistsPerTask": 1
+  },
+  "agents": [
+    {
+      "id": "astro-supervisor",
+      "role": "orchestrator",
+      "status": "SPECIFIED_NOT_IMPLEMENTED",
+      "tools": [],
+      "mayDelegate": ["astro-research", "astro-engineer", "astro-systems", "astro-memory", "astro-auditor"],
+      "mayDeclareCompletion": false
+    },
+    {
+      "id": "astro-research",
+      "role": "research",
+      "status": "SPECIFIED_NOT_IMPLEMENTED",
+      "tools": ["web.read", "github.read", "files.read"],
+      "sideEffects": false
+    },
+    {
+      "id": "astro-engineer",
+      "role": "software-engineering",
+      "status": "SPECIFIED_NOT_IMPLEMENTED",
+      "tools": ["github.read", "workspace.read", "workspace.write_branch", "tests.run"],
+      "sideEffects": "branch_only"
+    },
+    {
+      "id": "astro-systems",
+      "role": "infrastructure",
+      "status": "SPECIFIED_NOT_IMPLEMENTED",
+      "tools": ["cloud.read", "logs.read", "metrics.read"],
+      "sideEffects": false
+    },
+    {
+      "id": "astro-memory",
+      "role": "memory",
+      "status": "SPECIFIED_NOT_IMPLEMENTED",
+      "tools": ["memory.read", "memory.write_scoped"],
+      "sideEffects": "scoped_persistence_only"
+    },
+    {
+      "id": "astro-auditor",
+      "role": "verification_security",
+      "status": "SPECIFIED_NOT_IMPLEMENTED",
+      "tools": ["github.read", "workspace.read", "tests.read_results", "events.read"],
+      "mayApproveCompletion": true,
+      "mayExecuteTask": false
+    }
+  ],
+  "policy": {
+    "completionRequiresEvidence": true,
+    "humanApprovalRequiredFor": ["production_deploy", "external_side_effect", "payment", "destructive_change", "credential_change", "disk_partitioning"],
+    "maxRetriesDefault": 2,
+    "toolTimeoutSecondsDefault": 30,
+    "maxOutputBytesDefault": 65536,
+    "secretsInLogs": false
+  }
+}
