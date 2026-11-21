@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 import { astroMatrix } from './src/astro/matrix';
+import { createReceivedTask } from './src/astro/task';
 
 dotenv.config();
 
@@ -304,27 +305,29 @@ app.get('/api/astro/matrix-status', (req, res) => {
  */
 app.post('/api/astro/task', (req, res) => {
   try {
-    const { goal = 'Nova Tarefa Autônoma', context = '', riskLevel = 'LOW' } = req.body || {};
-    const newTask = {
-      id: `task_${Date.now()}`,
-      goal: String(goal || 'Tarefa sem título'),
-      context: String(context || 'Execução sob ASTRO CORE'),
-      prerequisites: ['Verificação de ambiente', 'Política Anti-Quota ativa'],
-      plan: ['Observar', 'Interpretar', 'Planejar', 'Validar', 'Executar', 'Verificar', 'Registrar'],
-      authorizedTools: ['Shell Seguro', 'In-memory Cache', 'Auditor de Integridade'],
-      riskLevel: (['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(riskLevel) ? riskLevel : 'LOW') as any,
-      status: 'CONCLUÍDA' as const,
-      attempts: 1,
-      evidence: ['Tarefa planejada e validada no ASTRO CORE MATRIX'],
-      verificationResult: 'Execução verificada com sucesso sem efeitos colaterais',
-      nextAction: 'Registrar na Memória Persistente',
-      createdAt: Date.now(),
-      completedAt: Date.now(),
-    };
+    const { goal = 'Nova tarefa', context = '', riskLevel = 'LOW' } = req.body || {};
+    const safeGoal = String(goal).trim().slice(0, 500);
+    const safeContext = String(context).slice(0, 5000);
+    if (!safeGoal) {
+      return res.status(400).json({ success: false, error: 'O campo goal é obrigatório.' });
+    }
+    if (!['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].includes(riskLevel)) {
+      return res.status(400).json({ success: false, error: 'riskLevel inválido.' });
+    }
+    const newTask = createReceivedTask({
+      goal: safeGoal,
+      context: safeContext,
+      riskLevel,
+    });
     astroMatrix.tasks.unshift(newTask);
-    res.json({ success: true, task: newTask });
-  } catch (err: any) {
-    res.status(500).json({ error: 'Falha ao processar tarefa' });
+    return res.status(202).json({
+      success: true,
+      task: newTask,
+      message: 'Tarefa recebida. Nenhuma execução foi iniciada ou verificada.',
+    });
+  } catch (err) {
+    console.error('Erro ao registrar tarefa ASTRO:', err);
+    return res.status(500).json({ success: false, error: 'Falha ao registrar tarefa.' });
   }
 });
 
@@ -349,5 +352,8 @@ async function startServer() {
   });
 }
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error('PORT deve ser um número inteiro entre 1 e 65535.');
+}
 startServer();
