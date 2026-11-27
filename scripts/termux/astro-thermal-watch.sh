@@ -1,19 +1,33 @@
 #!/usr/bin/env bash
 # ASTRO THERMAL WATCH — advisory-only battery temperature monitor.
 # Android remains responsible for thermal throttling and emergency protection.
-set -u
+set -e
 umask 077
 
-WARN_C="\${ASTRO_TEMP_WARN_C:-40}"
-CRIT_C="\${ASTRO_TEMP_CRIT_C:-43}"
-INTERVAL="\${ASTRO_THERMAL_INTERVAL:-30}"
+WARN_C="$ASTRO_TEMP_WARN_C"
+CRIT_C="$ASTRO_TEMP_CRIT_C"
+INTERVAL="$ASTRO_THERMAL_INTERVAL"
+[ -n "$WARN_C" ] || WARN_C=40
+[ -n "$CRIT_C" ] || CRIT_C=43
+[ -n "$INTERVAL" ] || INTERVAL=30
+
+if ! [[ "$WARN_C" =~ ^[0-9]+([.][0-9]+)?$ && "$CRIT_C" =~ ^[0-9]+([.][0-9]+)?$ && "$INTERVAL" =~ ^[0-9]+$ ]]; then
+  echo "Invalid thresholds or interval." >&2
+  exit 2
+fi
+if ! awk -v w="$WARN_C" -v c="$CRIT_C" 'BEGIN {exit !(c > w)}'; then
+  echo "Critical threshold must be greater than warning threshold." >&2
+  exit 2
+fi
+if [ "$INTERVAL" -lt 5 ]; then
+  echo "Interval must be at least 5 seconds." >&2
+  exit 2
+fi
+
 LOG_DIR="$HOME/.astro/logs"
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/thermal-watch.log"
 
-case "$WARN_C:$CRIT_C:$INTERVAL" in
-  *[!0-9:.]*|::*|:*|*:) echo "Invalid thresholds or interval." >&2; exit 2 ;;
-esac
 if ! command -v termux-battery-status >/dev/null 2>&1; then
   echo "Termux:API unavailable. Install the Termux:API Android app and 'pkg install termux-api'." >&2
   exit 1
@@ -48,7 +62,7 @@ sample() {
   fi
 }
 
-if [ "\${1:-}" = "--once" ]; then
+if [ "$1" = "--once" ]; then
   sample
   exit 0
 fi
