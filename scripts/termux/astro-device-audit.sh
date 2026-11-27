@@ -4,20 +4,20 @@
 set -u
 umask 077
 
-OUT_DIR="\${HOME}/.astro/reports"
+OUT_DIR="$HOME/.astro/reports"
 mkdir -p "$OUT_DIR"
 STAMP="$(date '+%Y%m%d-%H%M%S')"
-REPORT="\${OUT_DIR}/device-audit-\${STAMP}.txt"
+REPORT="$OUT_DIR/device-audit-$STAMP.txt"
 
 have() { command -v "$1" >/dev/null 2>&1; }
-section() { printf '\\n===== %s =====\\n' "$1"; }
+section() { printf '\n===== %s =====\n' "$1"; }
 
 {
   echo "ASTRO DEVICE AUDIT v1.0"
   echo "timestamp=$(date -Is 2>/dev/null || date)"
   echo "mode=READ_ONLY"
   echo "user=$(id 2>/dev/null | cut -c1-180)"
-  echo "termux_prefix=\${PREFIX:-unknown}"
+  echo "termux_prefix=$PREFIX"
 
   section "DEVICE"
   for key in ro.product.manufacturer ro.product.model ro.build.version.release ro.build.version.sdk ro.hardware; do
@@ -55,7 +55,7 @@ section() { printf '\\n===== %s =====\\n' "$1"; }
     name="unknown"; raw="unreadable"
     [ -r "$z/type" ] && name="$(cat "$z/type" 2>/dev/null)"
     [ -r "$z/temp" ] && raw="$(cat "$z/temp" 2>/dev/null)"
-    printf '%s type=%s raw_temp=%s\\n' "$z" "$name" "$raw"
+    printf '%s type=%s raw_temp=%s\n' "$z" "$name" "$raw"
   done
   [ "$found" -eq 1 ] || echo "No readable thermal zones exposed to this app."
 
